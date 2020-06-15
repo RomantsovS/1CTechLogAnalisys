@@ -1,0 +1,10 @@
+cat rphost*/*.log | \
+perl -n -e 'if (/^\d\d:\d\d\.\d+/) {$event =~ s/.\n/<line>/g; print $event."\n"; $event = "";} $event .= $_; END{print $event};' | \
+perl -pe 's/\xef\xbb\xbf//g' | \
+grep -P ",TLOCK,.*WaitConnections=\d+.*,Context" | \
+perl -pe 's/^\d+:\d+.\d+-//g' | \
+perl -pe 's/,Locks=.*//g' | \
+perl -pe 's/,TLOCK,.*Regions=/,Regions=/g' | \
+awk -F',Regions=' '{sum[$2]+=$1; count[$2]+=1;} END {for(i in sum) {printf "%ds %ds %d %s\n", sum[i]/1000000, sum[i]/count[i]/1000000,count[i],i}}' | \
+sort -rnb | \
+head -n 10
